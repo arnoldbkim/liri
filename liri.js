@@ -1,17 +1,20 @@
 require("dotenv").config();
 var twitter = require('twitter');
-var spotify = require('spotify');
+var spotify = require('node-spotify-api');
 var request = require('request');
 var fs = require('fs');
 var keys = require("./keys.js");
-var action = process.argv[2]
+var input = process.argv;
+var action = input[2];
+var inputs = input[3];
+
 
 switch (action) {
     case "my-tweets":
       myTweets();
       break;
     case "spotify-this-song":
-      mySpotify();
+      spotify(inputs);
       break;
     case "movie-this":
       myMovie();
@@ -47,23 +50,26 @@ function myTweets(){
 	});
 
 }
-//kept saying could not define items
-function mySpotify(){
-    var spotify = new spotify(keys.spotifyKeys);
-    var search = ' ';
-    spotify.search({ type: 'track', search }, function(err, data) {
-        if (err){
-            console.log(err);
-        }
-        else {
-            var songInfo = data.tracks.items;
-            console.log("Artist: " + songInfo[0].artists[0].name);
-            console.log("Song name: " + songInfo[0].name);
-            console.log("Link: " + songInfo[0].preview_url);
-            console.log("Album " + songInfo[0].album.name);
-        };
-    });
+function spotify(inputs) {
+
+	var spotify = new Spotify(keys.spotifyKeys);
+		if (!inputs){
+        	inputs = 'The Sign';
+    	}
+		spotify.search({ type: 'track', query: inputs }, function(err, data) {
+			if (err){
+	            console.log('Error occurred: ' + err);
+	            return;
+	        }
+
+	        var songInfo = data.tracks.items;
+	        console.log("Artist(s): " + songInfo[0].artists[0].name);
+	        console.log("Song Name: " + songInfo[0].name);
+	        console.log("Preview Link: " + songInfo[0].preview_url);
+	        console.log("Album: " + songInfo[0].album.name);
+	});
 }
+
 
 function myMovie() {
     var title = process.argv[3]
@@ -96,7 +102,8 @@ function doWhat() {
         if (dataArr[0] === "my-tweets") {
             myTweets();
         } else if (dataArr[0] === "spotify-this-song") {
-            mySpotify();
+            var songcheck = dataArr[1].slice(1, -1);
+			spotify(songcheck);
         } else if (dataArr[0] === "movie-this") {
             myMovie();
         }
